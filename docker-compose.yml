@@ -1,0 +1,16 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: ecommerce-recommendation-system
+    volumes:
+      - .:/app
+    tty: true
+    stdin_open: true
+    env_file:
+      - .env.example
+    ports:
+      - "8888:8888" # Porta para Jupyter Notebook / Dashboard se precisar
+      - "5000:5000" # Porta caso decida subir uma API local do MLflow
+    command: python src/main.py
