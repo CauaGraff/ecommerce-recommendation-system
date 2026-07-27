@@ -1,3 +1,6 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "ecommerce-recommendation-system"
@@ -28,6 +31,13 @@ dev = [
     "ipykernel>=6.29.0",       
 ]
 
+[tool.hatch.build.targets.wheel]
+packages = ["factories", "preprocessing", "config", "models"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
 [tool.ruff]
 line-length = 88
 target-version = "py311"
@@ -37,4 +47,4 @@ select = ["E", "F", "I", "N", "ANN"]
 ignore = []
 
 [tool.ruff.lint.pydocstyle]
-convention = "google" 
+convention = "google"
