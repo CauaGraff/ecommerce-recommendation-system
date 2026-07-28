@@ -1,7 +1,7 @@
 import importlib
 import sys
 from dataclasses import dataclass
-from config.settings import get_settings
+from src.config.settings import get_settings
 
 MIN_PYTHON_VERSION = (3, 11)
 REQUIRED_PACKAGES = ("torch", "sklearn", "mlflow", "numpy", "pandas", "pydantic_settings")

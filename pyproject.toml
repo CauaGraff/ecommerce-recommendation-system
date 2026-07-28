@@ -48,3 +48,9 @@ ignore = []
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+[tool.poetry]
+name = "ecommerce-recommendation-system"
+version = "0.1.0"
+package-mode = false 
+packages = [{include = "ecommerce_recommendation_system", from = "src"}]
