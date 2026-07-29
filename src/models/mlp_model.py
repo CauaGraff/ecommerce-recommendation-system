@@ -1,7 +1,7 @@
 from typing import Any
 import torch
 from torch import Tensor, nn
-from models.base import TorchRecommenderModel
+from src.models.base import TorchRecommenderModel
 
 class MLPRecommender(TorchRecommenderModel):
     """Rede neural feed-forward para recomendação de produtos.

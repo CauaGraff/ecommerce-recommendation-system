@@ -1,6 +1,6 @@
 from typing import Any
-from models.base import RecommenderModel
-from models.mlp_model import EmbeddingRecommender, MLPRecommender
+from src.models.base import RecommenderModel
+from src.models.mlp_model import EmbeddingRecommender, MLPRecommender
 
 
 class UnknownModelTypeError(ValueError):

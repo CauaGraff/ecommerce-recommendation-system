@@ -2,7 +2,7 @@ import numpy as np
 from numpy.typing import NDArray
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
-from preprocessing.base import PreprocessingStrategy
+from src.preprocessing.base import PreprocessingStrategy
 
 
 class StandardScalingStrategy(PreprocessingStrategy):
