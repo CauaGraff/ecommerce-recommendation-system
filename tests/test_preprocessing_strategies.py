@@ -1,6 +1,6 @@
 import numpy as np
-from preprocessing.preprocessor import Preprocessor
-from preprocessing.strategies import (
+from src.preprocessing.preprocessor import Preprocessor
+from src.preprocessing.strategies import (
     MinMaxScalingStrategy,
     StandardScalingStrategy,
 )

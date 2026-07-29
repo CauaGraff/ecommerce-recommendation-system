@@ -1,6 +1,6 @@
 import pytest
-from factories.model_factory import ModelFactory, UnknownModelTypeError
-from models.mlp_model import EmbeddingRecommender, MLPRecommender
+from src.factories.model_factory import ModelFactory, UnknownModelTypeError
+from src.models.mlp_model import EmbeddingRecommender, MLPRecommender
 
 
 class TestModelFactory:

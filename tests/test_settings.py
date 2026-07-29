@@ -1,5 +1,5 @@
 from pathlib import Path
-from config.settings import Settings
+from src.config.settings import Settings
 
 """Testes unitários para o carregamento de configurações."""
 class TestSettings:
