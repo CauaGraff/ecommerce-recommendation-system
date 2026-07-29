@@ -21,6 +21,7 @@ dependencies = [
     "numpy>=1.26.0",           
     "pydantic-settings>=2.2.0",
     "python-dotenv>=1.0.1",    
+    "dvc>=3.45.0"
 ]
 
 [dependency-groups]
@@ -39,18 +40,52 @@ pythonpath = ["."]
 testpaths = ["tests"]
 
 [tool.ruff]
-line-length = 88
-target-version = "py311"
+line-length = 99
+target-version = "py313"
+src = ["src", "tests"]
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+    "*.egg-info",
+    "docs/",
+]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "N", "ANN"] 
-ignore = []
+select = [
+    "E",  # pycodestyle errors
+    "F",  # Pyflakes
+    "I",  # isort (import sorting)
+    "N",  # pep8-naming
+    "T20",  # flake8-print (proíbe print(), usar logging)
+    "W",  # pycodestyle warnings
+]
+extend-ignore = [
+    "E203",  # whitespace antes de ':' (conflita com ruff format)
+    "E501",  # line too long (delegado ao ruff format)
+]
 
-[tool.ruff.lint.pydocstyle]
-convention = "google"
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["F401"]
+"notebooks/*" = ["T20"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+force-sort-within-sections = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
 
 [tool.poetry]
 name = "ecommerce-recommendation-system"
 version = "0.1.0"
-package-mode = false 
-packages = [{include = "ecommerce_recommendation_system", from = "src"}]
+packages = [{include = "src"}]
+
+[tool.uv.workspace]
+members = [
+    "dvc",
+]

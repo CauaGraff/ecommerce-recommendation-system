@@ -1,16 +1,39 @@
 services:
-  app:
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.14.1
+    container_name: recommender-mlflow
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow-data:/mlflow
+    command: >
+      mlflow server
+      --backend-store-uri /mlflow/db
+      --default-artifact-root /mlflow/artifacts
+      --host 0.0.0.0
+      --port 5000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  train:
     build:
       context: .
-      dockerfile: docker/Dockerfile
-    container_name: ecommerce-recommendation-system
+      dockerfile: Dockerfile
+    container_name: recommender-train
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
     volumes:
-      - .:/app
-    tty: true
-    stdin_open: true
-    env_file:
-      - .env.example
-    ports:
-      - "8888:8888" # Porta para Jupyter Notebook / Dashboard se precisar
-      - "5000:5000" # Porta caso decida subir uma API local do MLflow
-    command: python src/main.py
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./artifacts:/app/artifacts
+    entrypoint: ["python"]
+    command: ["scripts/train.py"]
+
+volumes:
+  mlflow-data:
