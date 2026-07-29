@@ -1,9 +1,3 @@
-"""Stage 1 do pipeline DVC: pré-processamento dos dados brutos.
-
-Uso:
-    poetry run python scripts/preprocess.py
-"""
-
 from pathlib import Path
 
 import pandas as pd
@@ -21,8 +15,7 @@ def clean_ratings(ratings: pd.DataFrame) -> pd.DataFrame:
 
     Returns:
         DataFrame limpo, sem duplicatas ou valores nulos.
-    """    
-
+    """
     return ratings.drop_duplicates().dropna()
 
 
@@ -39,17 +32,17 @@ def split_train_test(
     Returns:
         Tupla ``(train_df, test_df)``.
     """
-    
     return train_test_split(ratings, test_size=test_size, random_state=seed)
 
 
 def main() -> None:
     """Executa o pipeline de pré-processamento completo."""
     settings = get_settings()
+
     raw_ratings = load_raw_ratings(settings.data_raw_path)
     clean = clean_ratings(raw_ratings)
     train_df, test_df = split_train_test(clean, test_size=0.2, seed=settings.random_seed)
-    
+
     output_dir = Path(settings.data_processed_path)
     output_dir.mkdir(parents=True, exist_ok=True)
     train_df.to_csv(output_dir / "train.csv", index=False)

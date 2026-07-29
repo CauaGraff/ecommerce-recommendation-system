@@ -1,87 +1,77 @@
-"""Stage 3 do pipeline DVC: treino do modelo com tracking no MLflow.
-
-Treina um ``EmbeddingRecommender`` (via ``ModelFactory``) para prever o
-rating usuário-item, registrando parâmetros, métricas por época e o
-artefato final do modelo no MLflow.
-
-Uso:
-    poetry run python scripts/train.py
-"""
-
 import json
 from pathlib import Path
 
 import mlflow
+import mlflow.pytorch
 import numpy as np
 import torch
+from sklearn.model_selection import train_test_split
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
 from src.config.settings import get_settings
 from src.factories.model_factory import ModelFactory
-from src.models.base import RecommenderModel
+from src.training.early_stopping import EarlyStopping
+from src.training.neural_trainer import NeuralNetworkTrainer
 
-EPOCHS = 10
+MAX_EPOCHS = 50
+PATIENCE = 5
 BATCH_SIZE = 256
 LEARNING_RATE = 0.01
 EMBEDDING_DIM = 32
+VALIDATION_SIZE = 0.1
+REGISTERED_MODEL_NAME = "ecommerce-recommender"
 
 
-def load_train_tensors(processed_dir: Path) -> TensorDataset:
-    """Carrega os arrays de features de treino como um TensorDataset.
+def load_train_val_datasets(
+    processed_dir: Path, validation_size: float, seed: int
+) -> tuple[TensorDataset, TensorDataset]:
+    """Carrega as features de treino e separa uma fatia para validação.
 
     Args:
         processed_dir: Pasta com os arquivos gerados pelo feature_engineering.
+        validation_size: Fração do treino reservada para validação.
+        seed: Seed para reprodutibilidade do split.
 
     Returns:
-        Dataset PyTorch com pares (user_idx, item_idx) e o rating alvo.
+        Tupla ``(train_dataset, validation_dataset)``.
     """
     features = np.load(processed_dir / "train_features.npz")
-    inputs = torch.tensor(
-        np.stack([features["user_idx"], features["item_idx"]], axis=1), dtype=torch.long
+    inputs = np.stack([features["user_idx"], features["item_idx"]], axis=1)
+    targets = features["rating"]
+
+    train_x, val_x, train_y, val_y = train_test_split(
+        inputs, targets, test_size=validation_size, random_state=seed
     )
-    targets = torch.tensor(features["rating"], dtype=torch.float32)
-    return TensorDataset(inputs, targets)
+
+    train_dataset = TensorDataset(
+        torch.tensor(train_x, dtype=torch.long), torch.tensor(train_y, dtype=torch.float32)
+    )
+    val_dataset = TensorDataset(
+        torch.tensor(val_x, dtype=torch.long), torch.tensor(val_y, dtype=torch.float32)
+    )
+    return train_dataset, val_dataset
 
 
-def train_one_epoch(
-    model: RecommenderModel, loader: DataLoader, optimizer: torch.optim.Optimizer
-) -> float:
-    """Executa uma época de treino e retorna a perda média.
+def build_trainer(
+    processed_dir: Path, metadata: dict, seed: int
+) -> tuple[NeuralNetworkTrainer, ModelFactory]:
+    """Monta o modelo, otimizador e o treinador com early stopping.
 
     Args:
-        model: Modelo de recomendação a ser treinado.
-        loader: DataLoader com os batches de treino.
-        optimizer: Otimizador já configurado com os parâmetros do modelo.
+        processed_dir: Pasta com os dados processados.
+        metadata: Metadados de features (num_users, num_items).
+        seed: Seed para reprodutibilidade.
 
     Returns:
-        Perda (MSE) média da época.
+        Tupla ``(trainer, factory)`` prontos para o treino.
     """
-    loss_fn = nn.MSELoss()
-    total_loss = 0.0
+    train_dataset, val_dataset = load_train_val_datasets(processed_dir, VALIDATION_SIZE, seed)
+    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
-    for inputs, targets in loader:
-        optimizer.zero_grad()
-        predictions = model.forward(inputs)
-        loss = loss_fn(predictions, targets)
-        loss.backward()
-        optimizer.step()
-        total_loss += loss.item() * len(targets)
-
-    return total_loss / len(loader.dataset)
-
-
-def main() -> None:
-    """Executa o treino completo com tracking no MLflow."""
-    settings = get_settings()
-    torch.manual_seed(settings.random_seed)
-
-    processed_dir = Path(settings.data_processed_path)
-    metadata = json.loads((processed_dir / "feature_metadata.json").read_text())
-    dataset = load_train_tensors(processed_dir)
-    loader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
-
-    model = ModelFactory().create_model(
+    factory = ModelFactory()
+    model = factory.create_model(
         model_type="embedding",
         params={
             "num_users": metadata["num_users"],
@@ -90,27 +80,73 @@ def main() -> None:
         },
     )
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
+    early_stopping = EarlyStopping(patience=PATIENCE)
+
+    trainer = NeuralNetworkTrainer(
+        model=model,
+        train_loader=train_loader,
+        validation_loader=val_loader,
+        optimizer=optimizer,
+        loss_fn=nn.MSELoss(),
+        max_epochs=MAX_EPOCHS,
+        early_stopping=early_stopping,
+    )
+    return trainer, factory
+
+
+def main() -> None:
+    """Executa o treino completo com early stopping e publica no Registry."""
+    settings = get_settings()
+    torch.manual_seed(settings.random_seed)
+
+    processed_dir = Path(settings.data_processed_path)
+    metadata = json.loads((processed_dir / "feature_metadata.json").read_text())
+
+    trainer, _ = build_trainer(processed_dir, metadata, settings.random_seed)
 
     mlflow.set_tracking_uri(settings.mlflow_tracking_uri)
     mlflow.set_experiment(settings.mlflow_experiment_name)
 
     with mlflow.start_run(run_name="train-embedding-recommender"):
         mlflow.log_params(
-            {**model.get_config(), "epochs": EPOCHS, "learning_rate": LEARNING_RATE}
+            {
+                **trainer.model.get_config(),
+                "max_epochs": MAX_EPOCHS,
+                "patience": PATIENCE,
+                "learning_rate": LEARNING_RATE,
+                "validation_size": VALIDATION_SIZE,
+            }
         )
 
-        for epoch in range(1, EPOCHS + 1):
-            epoch_loss = train_one_epoch(model, loader, optimizer)
-            mlflow.log_metric("train_mse", epoch_loss, step=epoch)
-            print(f"Época {epoch}/{EPOCHS} - MSE treino: {epoch_loss:.4f}")
+        summary = trainer.fit()
+
+        mlflow.log_metric("best_validation_mse", summary.best_validation_loss)
+        mlflow.log_metric("epochs_trained", len(summary.train_losses))
+        mlflow.log_param("stopped_early", summary.stopped_early)
 
         models_path = Path(settings.models_path)
         models_path.mkdir(parents=True, exist_ok=True)
-        model_path = models_path / "embedding_recommender.pt"
-        torch.save(model.state_dict(), model_path)
-        mlflow.log_artifact(str(model_path))
+        torch.save(trainer.model.state_dict(), models_path / "embedding_recommender.pt")
 
-        print(f"Modelo salvo em {model_path} e registrado no MLflow.")
+        # Exemplo de entrada compatível com o formato de tupla/tensor esperado pelo modelo
+        sample_input = (
+            torch.tensor([0], dtype=torch.long),  # Exemplo de user_idx
+            torch.tensor([0], dtype=torch.long),  # Exemplo de item_idx
+        )
+
+        mlflow.pytorch.log_model(
+            pytorch_model=trainer.model,
+            name="model",
+            input_example=sample_input,
+            serialization_format="pickle",
+            registered_model_name=REGISTERED_MODEL_NAME,
+        )
+
+        print(
+            f"Treino concluído em {len(summary.train_losses)} épocas "
+            f"(early stop: {summary.stopped_early}). "
+            f"Melhor MSE de validação: {summary.best_validation_loss:.4f}"
+        )
 
 
 if __name__ == "__main__":

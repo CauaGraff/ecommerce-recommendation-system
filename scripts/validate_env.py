@@ -1,10 +1,12 @@
 import importlib
 import sys
 from dataclasses import dataclass
+
 from src.config.settings import get_settings
 
 MIN_PYTHON_VERSION = (3, 11)
 REQUIRED_PACKAGES = ("torch", "sklearn", "mlflow", "numpy", "pandas", "pydantic_settings")
+
 
 @dataclass
 class CheckResult:
@@ -15,6 +17,7 @@ class CheckResult:
         passed: Se a checagem foi bem-sucedida.
         detail: Mensagem adicional (motivo da falha ou valor encontrado).
     """
+
     name: str
     passed: bool
     detail: str
@@ -92,7 +95,7 @@ def main() -> int:
         print("\nAmbiente validado com sucesso.")
         return 0
 
-    print("\nAmbiente incompleto. Rode 'poetry install' e verifique o .env.")
+    print("\nAmbiente incompleto. Rode 'uv sync' e verifique o .env.")
     return 1
 
 

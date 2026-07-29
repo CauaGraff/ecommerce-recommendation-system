@@ -9,8 +9,8 @@ stages:
       size: 2483723
     - path: scripts/preprocess.py
       hash: md5
-      md5: 518e9866d288b79c2c1042fc204940b7
-      size: 1821
+      md5: deed23d305c1e8a2ec63c50e9bfdfeb3
+      size: 1688
     - path: src/data/loader.py
       hash: md5
       md5: 4d1c5ab7bf8624d16806b4eae78f0b8f
@@ -37,8 +37,8 @@ stages:
       size: 1987104
     - path: scripts/feature_engineering.py
       hash: md5
-      md5: f2a6b5b5a027b3dd7950bc669fd9031a
-      size: 3165
+      md5: 860a42f8c81f61e11e056205a6617b82
+      size: 2847
     - path: src/data/encoders.py
       hash: md5
       md5: c1d957c16aa39d7c8eecba066294a1de
@@ -77,8 +77,8 @@ stages:
       size: 1614122
     - path: scripts/train.py
       hash: md5
-      md5: 4243635eb70d81242acf71d2b22cbfa4
-      size: 3734
+      md5: d8df6a87e3eba6f19428780b02a2094a
+      size: 5197
     - path: src/factories/model_factory.py
       hash: md5
       md5: 8637d3d5cd9d36a98716523d093fbad9
@@ -87,10 +87,22 @@ stages:
       hash: md5
       md5: 4fe2da955ec63da881903e1955b33999
       size: 4571
+    - path: src/training/base.py
+      hash: md5
+      md5: 192854fe7633d82b5cba0fddf8e0a2f6
+      size: 3440
+    - path: src/training/early_stopping.py
+      hash: md5
+      md5: a3f97c68f5f9ecd9f4c32e7294973952
+      size: 1778
+    - path: src/training/neural_trainer.py
+      hash: md5
+      md5: ccce58fe384a570c391de36523838c76
+      size: 3531
     outs:
     - path: models/embedding_recommender.pt
       hash: md5
-      md5: a81581ffad420e9dc6207d3003fe5856
+      md5: b572d293d8f7e590dbc1c536d6c5ba83
       size: 1324885
   evaluate:
     cmd: python scripts/evaluate.py
@@ -101,14 +113,46 @@ stages:
       size: 404122
     - path: models/embedding_recommender.pt
       hash: md5
-      md5: a81581ffad420e9dc6207d3003fe5856
+      md5: b572d293d8f7e590dbc1c536d6c5ba83
       size: 1324885
     - path: scripts/evaluate.py
       hash: md5
-      md5: 8966ec5cabaf918400be8118c931b05a
-      size: 2957
+      md5: e65bd81f5a1eccc95e378abed125e8ac
+      size: 4071
+    - path: src/evaluation/metrics.py
+      hash: md5
+      md5: 8807f57a252dc18fab05806005cbfce2
+      size: 828
     outs:
     - path: artifacts/evaluation_metrics.json
       hash: md5
-      md5: 99897b38c2d89c05582c62b6a207bed8
-      size: 108
+      md5: 8f9f8c561268cd96ad693030148f4e35
+      size: 122
+  train_baselines:
+    cmd: python scripts/train_baselines.py
+    deps:
+    - path: data/processed/test_features.npz
+      hash: md5
+      md5: a4711307280daecaf03ffc15273803a2
+      size: 404122
+    - path: data/processed/train_features.npz
+      hash: md5
+      md5: 90215f56d240426e572c8a19fb8b6e9b
+      size: 1614122
+    - path: scripts/train_baselines.py
+      hash: md5
+      md5: e612db797f68a5f9f4a03cb282c89c02
+      size: 2573
+    - path: src/evaluation/metrics.py
+      hash: md5
+      md5: 8807f57a252dc18fab05806005cbfce2
+      size: 828
+    - path: src/models/baselines.py
+      hash: md5
+      md5: 76267cd7ecb29f854f79b3b2be55e396
+      size: 2953
+    outs:
+    - path: artifacts/baseline_metrics.json
+      hash: md5
+      md5: 9b7fd2653c25af4c87d57db88d4684b0
+      size: 325

@@ -1,7 +1,9 @@
 import json
 from pathlib import Path
+
 import mlflow
 import numpy as np
+
 from src.config.settings import get_settings
 from src.evaluation.metrics import compute_regression_metrics
 from src.models.baselines import GlobalAverageBaseline, LinearRegressionBaseline

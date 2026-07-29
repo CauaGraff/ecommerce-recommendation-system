@@ -1,13 +1,3 @@
-"""Stage 2 do pipeline DVC: engenharia de features.
-
-Converte ``user_id`` e ``item_id`` em índices contíguos (necessário para as
-camadas de embedding do modelo) e salva os arrays resultantes junto com os
-encoders ajustados, para reuso na inferência.
-
-Uso:
-    poetry run python scripts/feature_engineering.py
-"""
-
 import json
 from pathlib import Path
 

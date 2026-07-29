@@ -29,15 +29,31 @@ stages:
       - scripts/train.py
       - src/factories/model_factory.py
       - src/models/mlp_model.py
+      - src/training/base.py
+      - src/training/early_stopping.py
+      - src/training/neural_trainer.py
       - data/processed/train_features.npz
       - data/processed/feature_metadata.json
     outs:
       - models/embedding_recommender.pt
 
+  train_baselines:
+    cmd: python scripts/train_baselines.py
+    deps:
+      - scripts/train_baselines.py
+      - src/models/baselines.py
+      - src/evaluation/metrics.py
+      - data/processed/train_features.npz
+      - data/processed/test_features.npz
+    metrics:
+      - artifacts/baseline_metrics.json:
+          cache: false
+
   evaluate:
     cmd: python scripts/evaluate.py
     deps:
       - scripts/evaluate.py
+      - src/evaluation/metrics.py
       - data/processed/test_features.npz
       - models/embedding_recommender.pt
     metrics:

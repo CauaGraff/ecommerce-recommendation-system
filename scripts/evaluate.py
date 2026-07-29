@@ -11,7 +11,7 @@ from src.evaluation.metrics import compute_regression_metrics
 from src.factories.model_factory import ModelFactory
 
 REGISTERED_MODEL_NAME = "ecommerce-recommender"
-PRODUCTION_RMSE_THRESHOLD = 1.2
+PRODUCTION_RMSE_THRESHOLD = 1.2  # escala de rating 1-5; ajuste conforme o dataset
 
 
 def load_test_arrays(processed_dir: Path) -> tuple[np.ndarray, np.ndarray]:
@@ -64,7 +64,12 @@ def promote_if_qualified(rmse: float, threshold: float) -> str:
         A stage final atribuída à versão ("Production" ou "Staging").
     """
     client = MlflowClient()
-    latest_version = client.get_latest_versions(REGISTERED_MODEL_NAME, stages=["Staging"])[0]
+    
+    versions = client.search_model_versions(f"name='{REGISTERED_MODEL_NAME}'")
+    if not versions:
+        raise RuntimeError(f"Nenhuma versão encontrada para o modelo '{REGISTERED_MODEL_NAME}'.")
+    
+    latest_version = max(versions, key=lambda v: int(v.version))
 
     target_stage = "Production" if rmse <= threshold else "Staging"
     client.transition_model_version_stage(

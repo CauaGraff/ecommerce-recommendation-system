@@ -1,6 +1,6 @@
 services:
   mlflow:
-    image: ghcr.io/mlflow/mlflow:v2.14.1
+    image: ghcr.io/mlflow/mlflow:v3.0.1
     container_name: recommender-mlflow
     ports:
       - "5000:5000"
@@ -8,7 +8,7 @@ services:
       - mlflow-data:/mlflow
     command: >
       mlflow server
-      --backend-store-uri /mlflow/db
+      --backend-store-uri sqlite:////mlflow/mlflow.db
       --default-artifact-root /mlflow/artifacts
       --host 0.0.0.0
       --port 5000
