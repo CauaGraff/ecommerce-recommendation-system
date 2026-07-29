@@ -1,0 +1,45 @@
+stages:
+  preprocess:
+    cmd: python scripts/preprocess.py
+    deps:
+      - scripts/preprocess.py
+      - src/recommender/data/loader.py
+      - data/raw/ratings.csv
+    outs:
+      - data/processed/train.csv
+      - data/processed/test.csv
+
+  feature_engineering:
+    cmd: python scripts/feature_engineering.py
+    deps:
+      - scripts/feature_engineering.py
+      - src/recommender/data/encoders.py
+      - data/processed/train.csv
+      - data/processed/test.csv
+    outs:
+      - data/processed/train_features.npz
+      - data/processed/test_features.npz
+      - data/processed/user_encoder.joblib
+      - data/processed/item_encoder.joblib
+      - data/processed/feature_metadata.json
+
+  train:
+    cmd: python scripts/train.py
+    deps:
+      - scripts/train.py
+      - src/recommender/factories/model_factory.py
+      - src/recommender/models/mlp_model.py
+      - data/processed/train_features.npz
+      - data/processed/feature_metadata.json
+    outs:
+      - models/embedding_recommender.pt
+
+  evaluate:
+    cmd: python scripts/evaluate.py
+    deps:
+      - scripts/evaluate.py
+      - data/processed/test_features.npz
+      - models/embedding_recommender.pt
+    metrics:
+      - artifacts/evaluation_metrics.json:
+          cache: false
