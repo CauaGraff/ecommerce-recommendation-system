@@ -3,7 +3,7 @@ stages:
     cmd: python scripts/preprocess.py
     deps:
       - scripts/preprocess.py
-      - src/recommender/data/loader.py
+      - src/data/loader.py
       - data/raw/ratings.csv
     outs:
       - data/processed/train.csv
@@ -13,7 +13,7 @@ stages:
     cmd: python scripts/feature_engineering.py
     deps:
       - scripts/feature_engineering.py
-      - src/recommender/data/encoders.py
+      - src/data/encoders.py
       - data/processed/train.csv
       - data/processed/test.csv
     outs:
@@ -27,8 +27,8 @@ stages:
     cmd: python scripts/train.py
     deps:
       - scripts/train.py
-      - src/recommender/factories/model_factory.py
-      - src/recommender/models/mlp_model.py
+      - src/factories/model_factory.py
+      - src/models/mlp_model.py
       - data/processed/train_features.npz
       - data/processed/feature_metadata.json
     outs:
