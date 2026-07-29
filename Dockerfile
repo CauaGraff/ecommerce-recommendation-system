@@ -1,25 +1,19 @@
 # ---------- Stage 1: builder ----------
-FROM python:3.11-slim AS builder
 
-ENV POETRY_VERSION=1.8.3 \
-    POETRY_HOME="/opt/poetry" \
-    POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_IN_PROJECT=1
+FROM ghcr.io/astral-sh/uv:python3.11-bookworm-slim AS builder
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl build-essential \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN curl -sSL https://install.python-poetry.org | python3 -
-ENV PATH="${POETRY_HOME}/bin:${PATH}"
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PROJECT_ENVIRONMENT=/app/.venv
 
 WORKDIR /app
-COPY pyproject.toml poetry.lock ./
+COPY pyproject.toml uv.lock ./
 
-RUN poetry install --no-root --without dev
+RUN uv sync --frozen --no-dev --no-install-project
 
 COPY . .
-RUN poetry install --without dev
+RUN uv sync --frozen --no-dev
+
 
 # ---------- Stage 2: runtime ----------
 FROM python:3.11-slim AS runtime

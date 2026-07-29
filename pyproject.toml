@@ -33,7 +33,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["factories", "preprocessing", "config", "models"]
+packages = ["src"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
@@ -80,10 +80,6 @@ quote-style = "double"
 indent-style = "space"
 line-ending = "auto"
 
-[tool.poetry]
-name = "ecommerce-recommendation-system"
-version = "0.1.0"
-packages = [{include = "src"}]
 
 [tool.uv.workspace]
 members = [
