@@ -21,6 +21,7 @@ dependencies = [
     "dvc==3.67.1",
     "pydantic-settings==2.14.2",
     "python-dotenv==1.2.2",
+    "dvc-gdrive>=3.0.1",
 ]
 
 [dependency-groups]

@@ -5,7 +5,7 @@ dos usuários, com um modelo central em rede neural (PyTorch), pipeline
 containerizado (Docker), dados versionados (DVC) e experimentos
 rastreados (MLflow).
 
-Dataset utilizado: [MovieLens 100k](https://grouplens.org/datasets/movielens/100k/).
+Dataset utilizado: [MovieLens 100k](https://files.grouplens.org/datasets/movielens/ml-32m.zip).
 
 
 ## Estrutura do projeto
