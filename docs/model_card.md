@@ -20,8 +20,6 @@
 
 ## Performance
 
-> Preencha esta seção com os valores reais reportados por `uv run python scripts/evaluate.py` e `uv run python scripts/train_baselines.py` no seu ambiente, e depois copie os números do MLflow aqui antes da entrega final.
-
 | Modelo | MSE | RMSE | MAE | R² |
 |---|---|---|---|---|
 | Baseline — Média Global | 1.1000666029381543 | 1.0488405993944716 | 0.8315907291881814 | -2.3425006417499006e-05 |
