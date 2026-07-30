@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Iterable
 
 
-DEFAULT_URL = "https://files.grouplens.org/datasets/movielens/ml-32m.zip"
+DEFAULT_URL = "https://files.grouplens.org/datasets/movielens/ml-latest-small.zip"
 
 
 def parse_args() -> argparse.Namespace:

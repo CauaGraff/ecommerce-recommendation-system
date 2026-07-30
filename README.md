@@ -5,7 +5,7 @@ dos usuários, com um modelo central em rede neural (PyTorch), pipeline
 containerizado (Docker), dados versionados (DVC) e experimentos
 rastreados (MLflow).
 
-Dataset utilizado: [MovieLens 100k](https://files.grouplens.org/datasets/movielens/ml-32m.zip).
+Dataset utilizado: [MovieLens 100k](https://files.grouplens.org/datasets/movielens/ml-latest-small.zip).
 
 
 ## Estrutura do projeto
@@ -57,6 +57,7 @@ Este projeto usa o gerenciador de pacotes `uv`.
 uv sync
 cp .env.example .env
 uv run python scripts/validate_env.py
+uv run python scripts/download_dataset.py
 ```
 
 Se a validação passar, o ambiente está pronto para uso. Caso contrário, revise as dependências e o arquivo `.env`.
@@ -75,11 +76,11 @@ docker compose up -d mlflow
 
 O painel do MLflow ficará disponível em `http://localhost:5000`.
 
-### 5. Executar o pipeline completo
+### 5. Executar DVC
 
 ```bash
-dvc pull
-dvc repro
+uv run dvc remote add -d local_storage ../dvc-storage 
+uv run dvc repro
 ```
 
 O comando acima executa as etapas de preprocessamento, engenharia de features, treino do modelo neural, treino dos baselines e avaliação. Ao final, as métricas são salvas em `artifacts/` e o modelo pode aparecer no MLflow com ciclo de vida `Staging`/`Production`.
@@ -87,7 +88,7 @@ O comando acima executa as etapas de preprocessamento, engenharia de features, t
 ### 6. Visualizar métricas e experimentos
 
 ```bash
-dvc metrics show
+uv run dvc metrics show
 ```
 
 Também é possível acompanhar o processo em `http://localhost:5000` na aba `Models`.
